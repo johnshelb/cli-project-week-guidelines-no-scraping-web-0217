@@ -1,20 +1,45 @@
-class ExampleApi
+require 'pry'
+require 'json'
+require 'rest-client'
+require 'uri'
 
-  attr_reader :url, :music_data
+class NYTimesAPI
 
-  def initialize(url)
-    @url = url
-    @music_data = JSON.parse(RestClient.get(url))
-  end
+    API_KEY = "4cc0591c67de44389a86c422cce0ed76"
 
-  def make_albums
-    albums = []
-    all_albums = music_data["tracks"]["items"]
-    all_albums.each do |album|
-      album_name = album["name"]
-      albums << ExampleModel.new(album_name)
+    attr_reader :uri, :keyword, :begin_date, :end_date
+    attr_accessor :result
+
+    @@search_results = []
+
+    def initialize(keyword, begin_date, end_date)
+        @keyword = keyword
+        @begin_date = begin_date
+        @end_date = end_date
+        @page = "0"
+        @uri = URI("https://api.nytimes.com/svc/search/v2/articlesearch.json")
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+        uri.query = URI.encode_www_form(API_query(keyword, begin_date, end_date))
+        request = Net::HTTP::Get.new(uri.request_uri)
+        #binding.pry
+        @result = JSON.parse(http.request(request).body)
+        # puts @result.inspect
+        #binding.pry
+        @@search_results << ArticleModel.new(result).display_results
+        #binding.pry
     end
-    albums
-  end
+
+    def API_query(keyword="", begin_date="", end_date="")
+        query = {
+            "api-key" => API_KEY,
+            "q" => @keyword,
+            "begin_date" => @begin_date,
+            "end_date" => @end_date
+        }
+    end
+
+
+
 
 end

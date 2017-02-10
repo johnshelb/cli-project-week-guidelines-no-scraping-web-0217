@@ -1,7 +1,11 @@
-class ExampleCLI
+class NYTimesCLI
+
+    CURRENT_DAY = Time.now.to_s.split(" ")[0].split("-").join
+
 
   def call
-    puts "Welcome, what Spotify Artist should I use?"
+    puts "Welcome to the NY Times Article Search"
+    puts "What would you like to search?"
     run
   end
 
@@ -10,33 +14,51 @@ class ExampleCLI
   end
 
   def run
-    print "New search keyword: "
+    puts "Type 'help' for help or 'exit' to exit or 'search' to search"
+
     input = get_user_input
+
     if input == "help"
-      help
+        help
     elsif input == "exit"
-      exit
-    else
-      search(input)
+        exit
+    elsif input == "search"
+        query
     end
     run
   end
 
-  def search(input)
-    search_term = input.split(" ").join("%20").downcase
-    puts "Your search term was #{input.capitalize}, I am searching..."
-    url = "https://api.spotify.com/v1/search?q=#{search_term}&type=track&market=US"
-    albums = ExampleApi.new(url).make_albums
-    puts "Thank you for your patience. I found this on Spotify:"
-    albums.each do |album|
-      puts album.example
+  def query
+    puts "New search keyword: "
+    keyword_input = get_user_input
+    puts "Would you like to set a date range? (Y/N)"
+    user_input = get_user_input
+    if user_input.downcase == "y"
+        puts "Please input a start date (YYYYMMDD): "
+        start_date_input = get_user_input
+        puts "Please input an end date (YYYYMMDD): "
+        end_date_input = get_user_input
+    else
+        start_date_input = "19000101"
+        end_date_input = CURRENT_DAY
     end
+
+    search(keyword_input, start_date_input, end_date_input)
+  end
+
+  def search(keyword_input, start_date_input="19000101", end_date_input=CURRENT_DAY)
+    puts "Your search term was #{keyword_input}, I am searching..."
+    result_list = NYTimesAPI.new(keyword_input, start_date_input, end_date_input)
+    puts "Thank you for your patience. I found this on NY Times: "
   end
 
   def help
     puts "Type 'exit' to exit"
     puts "Type 'help' to view this menu again"
-    puts "Type anything else to search for an Artist's albums"
+    puts "Type 'search' to begin searching"
   end
 
 end
+
+a = NYTimesCLI.new
+a.run
